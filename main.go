@@ -5,15 +5,31 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/labstack/echo/v4"
 )
 
+var users = []string{"John, Mike"}
+
 func getUser(c echo.Context) error {
 	id := c.Param("id")
 	return c.String(http.StatusOK, id)
+}
+
+func showUsers(c echo.Context) error {
+	return c.String(http.StatusOK, strings.Join(users, ", "))
+}
+
+func saveUser(c echo.Context) error {
+	u := c.FormValue("name")
+	if u == "" {
+		return c.String(http.StatusBadRequest, "name must be non null")
+	}
+	users = append(users, u)
+	return c.String(http.StatusOK, "name: "+u)
 }
 
 func main() {
@@ -21,8 +37,9 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, Echo")
 	})
-	// e.POST("/users", saveUser)
+	e.POST("/users", saveUser)
 	e.GET("/users/:id", getUser)
+	e.GET("/users", showUsers)
 	// e.PUT("/users/:id", updateUser)
 	// e.DELETE("/users/:id", deleteUser)
 	go func() {
